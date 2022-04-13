@@ -1,9 +1,8 @@
-import { templateJitUrl } from '@angular/compiler';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { validateBasis } from '@angular/flex-layout';
+import { Component, OnInit, ViewChild, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Feedback, ContactType } from '../shared/feedback';
 import { flyInOut } from '../animations/app.animation';
+import { FeedbackService } from '../services/feedback.service';
 
 @Component({
   selector: 'app-contact',
@@ -52,8 +51,13 @@ validationMessages = {
 	  },
 };
 
-  constructor(private fb: FormBuilder) { 
-	  this.createForm();
+	submitting = false;
+    submitted = false;
+    receivedForm: Feedback;
+
+  constructor(private fb: FormBuilder,
+		private feedbackService: FeedbackService) { 
+		this.createForm();
   }
 
   ngOnInit() {
@@ -97,18 +101,28 @@ validationMessages = {
   }
 
   onSubmit() {
+	  this.submitting = true;
 	  this.feedback = this.feedbackForm.value;
+	  this.feedbackService.submitFeedback(this.feedback)
+	  	.subscribe(feedback => {
+			  this.feedback = feedback;
+			  this.receivedForm = feedback;
+			  this.submitting = false;
+			  this.submitted = true;
+		  });
 	  console.log(this.feedback);
-	  this.feedbackForm.reset({
-		firstname: '',
-		lastname: '',
-		telnum: '',
-		email: '',
-		agree: false,
-		contacttype: 'None',
-		message: ''
-	  });
-	  this.feedbackFormDirective.resetForm();
+	  setTimeout(() => {
+		  this.submitted = false;
+		  this.feedbackForm.reset({
+			firstname: '',
+			lastname: '',
+			telnum: '',
+			email: '',
+			agree: false,
+			contacttype: 'None',
+			message: ''
+		  });
+		  this.feedbackFormDirective.resetForm();
+	  }, 5000);
   }
-
 }
